@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Table Summarizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: pink;
+        }
+        textarea {
+            width: 100%;
+            height: 150px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #summary {
+            margin-top: 20px;
+            white-space: pre-wrap;
+        }
+        .emoji {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Table Summarizer</h1>
+<p><span class="emoji">🌸</span>Paste your table below (HTML or plain text):</p>
+<textarea id="tableInput" placeholder="Paste your table here..."></textarea>
+<button onclick="summarizeTable()">Summarize Table</button>
+
+<h2>Summary:</h2>
+<pre id="summary"></pre>
+
+<script>
+    function summarizeTable() {
+        const tableInput = document.getElementById('tableInput').value;
+        const isHTMLTable = tableInput.trim().startsWith('<table');
+
+        if (isHTMLTable) {
+            summarizeHTMLTable(tableInput);
+        } else {
+            summarizePlainTextTable(tableInput);
+        }
+    }
+
+    function summarizeHTMLTable(tableInput) {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(tableInput, 'text/html');
+        const table = doc.querySelector('table');
+
+        if (!table) {
+            document.getElementById('summary').textContent = 'No table found. Please make sure to paste a valid HTML table.';
+            return;
+        }
+
+        const rows = Array.from(table.rows);
+        if (rows.length < 2) {
+            document.getElementById('summary').textContent = 'The table must have at least a header row and one data row.';
+            return;
+        }
+
+        const columnHeaders = Array.from(rows[0].cells).map(cell => cell.textContent.trim());
+        let summary = '';
+
+        for (let i = 1; i < rows.length; i++) {
+            const cells = rows[i].cells;
+            const rowHeader = cells[0].textContent.trim();
+
+            for (let j = 1; j < cells.length; j++) {
+                summary += `The "${columnHeaders[j]}" for "${rowHeader}" is "${cells[j].textContent.trim()}"\n`;
+            }
+        }
+
+        document.getElementById('summary').textContent = summary;
+    }
+
+    function summarizePlainTextTable(tableInput) {
+        const lines = tableInput.trim().split('\n');
+        const rows = lines.map(line => line.split('\t'));
+
+        if (rows.length < 2) {
+            document.getElementById('summary').textContent = 'The table must have at least a header row and one data row.';
+            return;
+        }
+
+        const columnHeaders = rows[0].map(cell => cell.trim());
+        let summary = '';
+
+        for (let i = 1; i < rows.length; i++) {
+            const row = rows[i];
+            const rowHeader = row[0].trim();
+
+            for (let j = 1; j < row.length; j++) {
+                summary += `The "${columnHeaders[j]}" for "${rowHeader}" is "${row[j].trim()}"\n`;
+            }
+        }
+
+        document.getElementById('summary').textContent = summary;
+    }
+</script>
+
+</body>
+</html>
